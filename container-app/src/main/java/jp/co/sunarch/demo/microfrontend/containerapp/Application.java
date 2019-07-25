@@ -1,5 +1,6 @@
 package jp.co.sunarch.demo.microfrontend.containerapp;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.SpringApplication;
@@ -18,13 +19,43 @@ public class Application {
 	}
 
 	@GetMapping("/")
-	public String get(
+	public String index(Model model) {
+		model.addAttribute("themes", Arrays.asList(
+			"default",
+			"cerulean",
+			"cosmo",
+			"cyborg",
+			"darkly",
+			"flatly",
+			"journal",
+			"litera",
+			"luman",
+			"lux",
+			"materia",
+			"minty",
+			"pulse",
+			"sandstone",
+			"simplex",
+			"sketchy",
+			"slate",
+			"solar",
+			"spacelab",
+			"superhero",
+			"united",
+			"yeti"
+		));
+		model.addAttribute("components", Arrays.asList("a-component", "b-component"));
+		return "index";
+	}
+
+	@GetMapping("/main")
+	public String main(
 		Model model,
 		@RequestParam(name = "theme", defaultValue = "default") String theme,
-		@RequestParam(name = "components", defaultValue = "a,b") List<String> components) {
+		@RequestParam(name = "components", defaultValue = "a-component,b-component") List<String> components) {
 		model.addAttribute("theme", theme);
 		model.addAttribute("components", components);
-		return "index";
+		return "main";
 	}
 
 }
