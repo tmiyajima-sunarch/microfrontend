@@ -13,6 +13,7 @@
     template: `
       <div>
         <p>ここは、a-serviceから配信されているJavaScriptで描画されています。</p>
+        <p>Vue.jsで描画しています。</p>
         <p>以下のパラメータがコンテナ画面より渡されています。</p>
         <pre class="bg-dark text-white p-3">{{ JSON.stringify($props, null, 2) }}</pre>
         <button class="btn btn-primary" type="button" :disabled="loading" @click="callApi()">

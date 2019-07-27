@@ -1,22 +1,10 @@
-const BComponent = {
-  props: {
-    message: {
-      type: String,
-      default: '(No message)'
-    }
-  },
-  template: `
-    <h1>This is B-Component: Hello {{ message }}</h1>
-  `
-}
-
 window.renderBComponent = (el, options) => {
-  new Vue({
-    el,
-    render(h) {
-      return h(BComponent, {
-        props: options
-      })
-    }
-  })
+  $(el).append($(`
+    <div>
+      <p>ここは、b-serviceにより描画されています。</p>
+      <p>jQueryにより、DOMを生成して描画しています。</p>
+      <p>以下のパラメータがコンテナ画面より渡されています。</p>
+      <pre class="p-3 bg-dark text-white">${JSON.stringify(options, null, 2)}</pre>
+    </div>
+  `))
 }
