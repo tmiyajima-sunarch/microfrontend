@@ -74,7 +74,10 @@
           <script>
             window.renderBComponent(document.getElementById('b-component-content'), {
               message: 'from container',
-              baseUrl: 'http://localhost:8082'
+              baseUrl: 'http://localhost:8082',
+              onClick() {
+                alert('コンテナ画面から渡したコールバックが呼ばれました')
+              }
             });
           </script>
         </div>
