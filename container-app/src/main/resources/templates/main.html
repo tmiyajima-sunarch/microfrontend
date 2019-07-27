@@ -5,12 +5,33 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <title>container-app</title>
+
     <!-- Bootstrap CSS -->
     <link th:if="${theme} == 'default'" rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link th:if="${theme} != 'default'" rel="stylesheet" th:href="@{https://bootswatch.com/4/{theme}/bootstrap.min.css(theme=${theme})}">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
-
-    <title>container-app</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="container" id="app">
+        <div class="my-5">
+          <h1>マイクロフロントエンドサンプル</h1>
+        </div>
+        <div class="my-3">
+          <a th:href="@{/}">戻る</a>
+        </div>
+        <div role="tablist">
+          <template v-for="m in microFrontends">
+            <micro-frontend-accordion-item
+              :id="`${m.id}-body`"
+              :micro-frontend="m"
+              :options="{ message: 'from container', baseUrl: m.url, onClick: () => handleClick() }"
+            ></micro-frontend-accordion-item>
+          </template>
+        </div>
+      </div>
+    </div>
 
     <!-- Bootstrap JS-->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -20,68 +41,176 @@
     <!-- Vue.js -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
-  </head>
-  <body>
-    <div class="container">
-      <div class="my-5">
-        <h1>マイクロフロントエンドサンプル</h1>
-      </div>
-      <div class="my-3">
-        <a th:href="@{/}">戻る</a>
-      </div>
-      <div class="accordion" id="components">
-        <div th:if="${components.contains('a-component')}" class="card">
-          <div class="card-header" id="a-component-header">
-            <h2 class="mb-0">
-              <button class="btn btn-link text-body" type="button"
-                data-toggle="collapse" data-target="#a-component-body"
-                aria-expanded="true" aria-controls="a-component-body">
-                a-serviceのコンポーネント
-              </button>
-            </h2>
-          </div>
-          <div class="collapse" id="a-component-body" data-parent="#components"
-            aria-labelledby="a-component-header">
-            <div class="card-body">
-              <div class="card-text" id="a-component-content"></div>
-            </div>
-          </div>
-          <script src="http://localhost:8081/js/a-component.js"></script>
-          <script>
-            window.renderAComponent(document.getElementById('a-component-content'), {
-              message: 'from container',
-              baseUrl: 'http://localhost:8081'
-            });
-          </script>
-        </div>
-        <div th:if="${components.contains('b-component')}" class="card">
-          <div class="card-header" id="b-component-header">
-            <h2 class="mb-0">
-              <button class="btn btn-link text-body" type="button"
-                data-toggle="collapse" data-target="#b-component-body"
-                aria-expanded="true" aria-controls="b-component-body">
-                b-serviceのコンポーネント
-              </button>
-            </h2>
-          </div>
-          <div class="collapse" id="b-component-body" data-parent="#components"
-            aria-labelledby="b-component-header">
-            <div class="card-body">
-              <div class="card-text" id="b-component-content"></div>
-            </div>
-          </div>
-          <script src="http://localhost:8082/js/b-component.js"></script>
-          <script>
-            window.renderBComponent(document.getElementById('b-component-content'), {
-              message: 'from container',
-              baseUrl: 'http://localhost:8082',
-              onClick() {
-                alert('コンテナ画面から渡したコールバックが呼ばれました')
-              }
-            });
-          </script>
-        </div>
-      </div>
-    </div>
+
+    <script th:inline="javascript">
+      /**
+       * マイクロフロントエンドのコンポーネントリスト。
+       * リクエスト内容に応じて、動的に可変する。
+       */
+      const MICRO_FRONTENDS = /*[[${microFrontends}]]*/[];
+
+      /**
+       * マイクロフロントエンドの描画用コンポーネント。
+       * 動的にマイクロフロントエンドのコンポーネントを描画する。
+       */
+      const MicroFrontend = {
+        props: {
+          /**
+           * 読み込むコンポーネント名。
+           */
+          name: {
+            type: String,
+            required: true
+          },
+          /**
+           * マイクロサービスのURL。
+           */
+          url: {
+            type: String,
+            required: true
+          },
+          /**
+           * コンポーネントに渡すパラメータ。
+           */
+          options: {
+            type: Object,
+            required: false
+          }
+        },
+
+        template: `
+          <div :id="containerId"></div>
+        `,
+
+        mounted() {
+          this.loadMicroFrontend();
+        },
+
+        beforeDestroy() {
+          this.unmountMicroFrontend();
+        },
+
+        computed: {
+          containerId() {
+            return `${this.name}-container`;
+          },
+
+          renderFunction() {
+            return `render${this.name}`;
+          },
+
+          unmountFunction() {
+            return `unmount${this.name}`;
+          }
+        },
+
+        methods: {
+          loadMicroFrontend() {
+            const scriptId = `micro-frontend-script-${this.name}`;
+
+            if (document.getElementById(scriptId)) {
+              this.renderMicroFrontend();
+              return;
+            }
+
+            fetch(`${this.url}/asset-manifest.json`, { mode: "cors" })
+              .then(res => res.json())
+              .then(manifest => {
+                const $script = document.createElement('script');
+                $script.id = scriptId;
+                $script.src = `${this.url}${manifest['main.js']}`;
+                $script.onload = () => this.renderMicroFrontend();
+                document.head.appendChild($script);
+              });
+          },
+
+          renderMicroFrontend() {
+            window[this.renderFunction](document.getElementById(this.containerId), this.options);
+          },
+
+          unmountMicroFrontend() {
+            window[this.unmountFunction](document.getElementById(this.containerId));
+          }
+        }
+      };
+
+      /**
+       * マイクロフロントエンドのコンポーネントをアコーディオンで表示する。
+       */
+      const MicroFrontendAccordionItem = {
+        props: {
+          /**
+           * @see https://bootstrap-vue.js.org/docs/components/collapse/#accordion-support
+           */
+          id: {
+            type: String,
+            required: true
+          },
+          /**
+           * @see https://bootstrap-vue.js.org/docs/components/collapse/#accordion-support
+           */
+          accordion: {
+            type: String,
+            default: 'default-accordion'
+          },
+          /**
+           * 描画対象のマイクロフロントエンドのコンポーネント。
+           */
+          microFrontend: {
+            type: Object,
+            required: true
+          },
+          /**
+           * コンポーネントに渡すパラメータ。
+           */
+          options: {
+            type: Object,
+            required: false
+          }
+        },
+
+        components: {
+          MicroFrontend
+        },
+
+        template: `
+          <b-card no-body>
+            <b-card-header role="tab">
+              <b-button variant="link" class="text-body" type="button" v-b-toggle="id">
+                {{ microFrontend.id }}
+              </b-button>
+            </b-card-header>
+            <b-collapse :id="id" :accordion="accordion" role="tabpanel">
+              <b-card-body>
+                <b-card-text>
+                  <micro-frontend
+                    :name="microFrontend.name"
+                    :url="microFrontend.url"
+                    :options="options"
+                  ></micro-frontend>
+                </b-card-text>
+              </b-card-body>
+            </b-collapse>
+          </b-card>
+        `
+      }
+
+      new Vue({
+        el: '#app',
+        components: {
+          MicroFrontendAccordionItem
+        },
+        computed: {
+          microFrontends() {
+            return MICRO_FRONTENDS;
+          }
+        },
+        methods: {
+          handleClick() {
+            alert('コンテナ画面から渡したコールバックが呼ばれました');
+          }
+        }
+      });
+    </script>
   </body>
 </html>

@@ -18,9 +18,9 @@ rectangle b-service as bService {
 }
 note right: port=8082
 
-browser -- containerPage : "(1)"
-browser -- aComponent : "(2)"
-browser -- bComponent : "(3)"
+browser -- containerPage
+browser -- aComponent
+browser -- bComponent
 @enduml
 
 @startuml シーケンス図
@@ -37,14 +37,18 @@ create containerPage
 browser -> containerPage : 表示
 
 group a-componentの描画
-browser -> aService : <script>により、jsファイルをリクエスト
-return render関数を含むjsファイルを返却
+browser -> aService : asset-manifest.jsonを取得
+return
+browser -> aService : asset-manifest.json内の'main.js'を取得
+return
 browser -> containerPage : render関数を実行してコンポーネントを表示
 end
 
 group b-componentの描画
-browser -> bService : <script>により、jsファイルをリクエスト
-return rendert関数を含むjsファイルを返却
+browser -> bService : asset-manifest.jsonを取得
+return
+browser -> bService : asset-manifest.json内の'main.js'を取得
+return
 browser -> containerPage : render関数を実行してコンポーネントを表示
 end
 @enduml
