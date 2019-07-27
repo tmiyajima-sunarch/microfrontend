@@ -1,0 +1,50 @@
+@startuml 構成図
+left to right direction
+
+rectangle ブラウザ as browser
+
+rectangle container-app as containerApp {
+  component コンテナ画面 as containerPage
+}
+note right: port=8080
+
+rectangle a-service as aService {
+  component "a-component" as aComponent
+}
+note right: port=8081
+
+rectangle b-service as bService {
+  component "b-component" as bComponent
+}
+note right: port=8082
+
+browser -- containerPage : "(1)"
+browser -- aComponent : "(2)"
+browser -- bComponent : "(3)"
+@enduml
+
+@startuml シーケンス図
+participant ブラウザ as browser
+participant コンテナ画面 as containerPage
+participant "container-app" as containerApp
+participant "a-service" as aService
+participant "b-service" as bService
+
+browser -> containerApp : 画面をリクエスト
+containerApp -> containerApp : リクエスト内容に応じてHTMLを組み立てる
+containerApp -> browser : HTMLを返却
+create containerPage
+browser -> containerPage : 表示
+
+group a-componentの描画
+browser -> aService : <script>により、jsファイルをリクエスト
+return render関数を含むjsファイルを返却
+browser -> containerPage : render関数を実行してコンポーネントを表示
+end
+
+group b-componentの描画
+browser -> bService : <script>により、jsファイルをリクエスト
+return rendert関数を含むjsファイルを返却
+browser -> containerPage : render関数を実行してコンポーネントを表示
+end
+@enduml
