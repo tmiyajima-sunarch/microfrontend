@@ -12,17 +12,16 @@
     },
     template: `
       <div>
-        <p>ここは、a-serviceから配信されているJavaScriptで描画されています。</p>
-        <p>Vue.jsで描画しています。</p>
+        <p>ここは、a-serviceにより、Vue.jsで描画されています。</p>
         <p>以下のパラメータがコンテナ画面より渡されています。</p>
         <pre class="bg-dark text-white p-3">{{ JSON.stringify($props, null, 2) }}</pre>
-        <button class="btn btn-primary" type="button" :disabled="loading" @click="callApi()">
+        <b-button variant="primary" type="button" :disabled="loading" @click="callApi()">
           <template v-if="loading">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span class="sr-only">Loading...</span>
           </template>
           APIを呼び出す
-        </button>
+        </b-button>
         <pre class="bg-dark text-white p-3 mt-3 mb-0" v-if="result">{{ JSON.stringify(result, null, 2) }}</pre>
       </div>
     `,
