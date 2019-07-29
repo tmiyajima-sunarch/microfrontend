@@ -23,11 +23,28 @@
         </div>
         <div role="tablist">
           <template v-for="m in microFrontends">
-            <micro-frontend-accordion-item
-              :id="`${m.id}-body`"
-              :micro-frontend="m"
-              :options="{ message: 'from container', baseUrl: m.url, onClick: () => handleClick() }"
-            ></micro-frontend-accordion-item>
+            <b-card no-body>
+              <b-card-header role="tab">
+                <b-button variant="link" class="text-body" type="button" v-b-toggle="`${m.id}-body`">
+                  {{ m.id }}
+                </b-button>
+              </b-card-header>
+              <b-collapse :id="`${m.id}-body`" :accordion="accordion" role="tabpanel">
+                <b-card-body>
+                  <b-card-text>
+                    <micro-frontend
+                      :name="m.name"
+                      :url="m.url"
+                      :options="{
+                        message: 'from container',
+                        baseUrl: m.url,
+                        onClick: () => handleClick()
+                      }"
+                    ></micro-frontend>
+                  </b-card-text>
+                </b-card-body>
+              </b-collapse>
+            </b-card>
           </template>
         </div>
       </div>
@@ -42,167 +59,22 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
 
+    <!-- マイクロフロントエンド用の独自コンポーネント -->
+    <script th:src="@{/js/micro-frontend.js}"></script>
+
     <script th:inline="javascript">
-      /**
-       * マイクロフロントエンドのコンポーネントリスト。
-       * リクエスト内容に応じて、動的に可変する。
-       */
-      const MICRO_FRONTENDS = /*[[${microFrontends}]]*/[];
-
-      /**
-       * マイクロフロントエンドの描画用コンポーネント。
-       * 動的にマイクロフロントエンドのコンポーネントを描画する。
-       */
-      const MicroFrontend = {
-        props: {
-          /**
-           * 読み込むコンポーネント名。
-           */
-          name: {
-            type: String,
-            required: true
-          },
-          /**
-           * マイクロサービスのURL。
-           */
-          url: {
-            type: String,
-            required: true
-          },
-          /**
-           * コンポーネントに渡すパラメータ。
-           */
-          options: {
-            type: Object,
-            required: false
-          }
-        },
-
-        template: `
-          <div :id="containerId"></div>
-        `,
-
-        mounted() {
-          this.loadMicroFrontend();
-        },
-
-        beforeDestroy() {
-          this.unmountMicroFrontend();
-        },
-
-        computed: {
-          containerId() {
-            return `${this.name}-container`;
-          },
-
-          renderFunction() {
-            return `render${this.name}`;
-          },
-
-          unmountFunction() {
-            return `unmount${this.name}`;
-          }
-        },
-
-        methods: {
-          loadMicroFrontend() {
-            const scriptId = `micro-frontend-script-${this.name}`;
-
-            if (document.getElementById(scriptId)) {
-              this.renderMicroFrontend();
-              return;
-            }
-
-            fetch(`${this.url}/asset-manifest.json`, { mode: "cors" })
-              .then(res => res.json())
-              .then(manifest => {
-                const $script = document.createElement('script');
-                $script.id = scriptId;
-                $script.src = `${this.url}${manifest['main.js']}`;
-                $script.onload = () => this.renderMicroFrontend();
-                document.head.appendChild($script);
-              });
-          },
-
-          renderMicroFrontend() {
-            window[this.renderFunction](document.getElementById(this.containerId), this.options);
-          },
-
-          unmountMicroFrontend() {
-            window[this.unmountFunction](document.getElementById(this.containerId));
-          }
-        }
-      };
-
-      /**
-       * マイクロフロントエンドのコンポーネントをアコーディオンで表示する。
-       */
-      const MicroFrontendAccordionItem = {
-        props: {
-          /**
-           * @see https://bootstrap-vue.js.org/docs/components/collapse/#accordion-support
-           */
-          id: {
-            type: String,
-            required: true
-          },
-          /**
-           * @see https://bootstrap-vue.js.org/docs/components/collapse/#accordion-support
-           */
-          accordion: {
-            type: String,
-            default: 'default-accordion'
-          },
-          /**
-           * 描画対象のマイクロフロントエンドのコンポーネント。
-           */
-          microFrontend: {
-            type: Object,
-            required: true
-          },
-          /**
-           * コンポーネントに渡すパラメータ。
-           */
-          options: {
-            type: Object,
-            required: false
-          }
-        },
-
-        components: {
-          MicroFrontend
-        },
-
-        template: `
-          <b-card no-body>
-            <b-card-header role="tab">
-              <b-button variant="link" class="text-body" type="button" v-b-toggle="id">
-                {{ microFrontend.id }}
-              </b-button>
-            </b-card-header>
-            <b-collapse :id="id" :accordion="accordion" role="tabpanel">
-              <b-card-body>
-                <b-card-text>
-                  <micro-frontend
-                    :name="microFrontend.name"
-                    :url="microFrontend.url"
-                    :options="options"
-                  ></micro-frontend>
-                </b-card-text>
-              </b-card-body>
-            </b-collapse>
-          </b-card>
-        `
-      }
-
       new Vue({
         el: '#app',
         components: {
-          MicroFrontendAccordionItem
+          MicroFrontend
         },
         computed: {
+          /**
+           * マイクロフロントエンドのコンポーネントリスト。
+           * リクエスト内容に応じて、動的に可変する。
+           */
           microFrontends() {
-            return MICRO_FRONTENDS;
+            return /*[[${microFrontends}]]*/[];
           }
         },
         methods: {
