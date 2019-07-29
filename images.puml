@@ -52,3 +52,30 @@ return
 browser -> containerPage : render関数を実行してコンポーネントを表示
 end
 @enduml
+
+@startuml 依存1
+rectangle コンテナ画面 {
+  component Vue
+  component BootstrapVue
+  component jQuery
+
+  rectangle "a-component" as aComponent
+  rectangle "b-component" as bComponent
+
+  Vue <-- aComponent
+  BootstrapVue <-- aComponent
+  jQuery <-- bComponent
+}
+@enduml
+
+@startuml 依存2
+rectangle コンテナ画面 {
+  rectangle "a-component" as aComponent {
+    component Vue
+    component BootstrapVue
+  }
+  rectangle "b-component" as bComponent {
+    component jQuery
+  }
+}
+@enduml
